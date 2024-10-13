@@ -2,7 +2,7 @@ name := "text-util"
 
 organization := "no.vedaadata"
 
-version := "1.0.0"
+version := "1.0.1"
 
 scalaVersion := "3.3.3"
 
