@@ -27,3 +27,6 @@ object Render:
 
   given Render[java.io.File] with
     def apply(x: java.io.File) = Some(x.getName)
+
+  given Render[java.nio.file.Path] with
+    def apply(x: java.nio.file.Path) = Some(x.toString)

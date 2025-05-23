@@ -35,14 +35,14 @@ object Format:
   object IntFormat:
     extension (f: IntFormat) def parseInt(x: String) = f.parse(x).intValue
     extension (f: IntFormat) def formatInt(x: Int) = f.format(x)
-    given default: IntFormat = new java.text.DecimalFormat("0")
+    given default: IntFormat = new java.text.DecimalFormat
 
   opaque type LongFormat >: java.text.DecimalFormat = java.text.DecimalFormat
 
   object LongFormat:
     extension (f: LongFormat) def formatLong(x: Long) = f.format(x)
     extension (f: LongFormat) def parseLong(x: String) = f.parse(x).longValue
-    given default: LongFormat = new java.text.DecimalFormat("0")
+    given default: LongFormat = new java.text.DecimalFormat
 
   opaque type FloatFormat >: java.text.DecimalFormat = java.text.DecimalFormat
 

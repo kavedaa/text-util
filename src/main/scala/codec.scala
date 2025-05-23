@@ -9,49 +9,49 @@ trait TextEncoder[-A]:
 
 object TextEncoder:
 
-  given [A](using inner: TextEncoder[A]): TextEncoder[Option[A]] with
+  given optionEncoder[A](using inner: TextEncoder[A]): TextEncoder[Option[A]] with
     def encode(x: Option[A]) = x.map(inner.encode).getOrElse("")
 
-  given TextEncoder[String] with
+  given stringEncoder: TextEncoder[String] with
     def encode(x: String) = x
 
-  given TextEncoder[Char] with
+  given charEncoder: TextEncoder[Char] with
     def encode(x: Char) = x.toString
 
-  given (using format: Format.BooleanFormat): TextEncoder[Boolean] with
+  given booleanEncoder(using format: Format.BooleanFormat): TextEncoder[Boolean] with
     def encode(x: Boolean) = format.formatBoolean(x)
 
-  given (using format: Format.ByteFormat): TextEncoder[Byte] with
+  given byteEncoder(using format: Format.ByteFormat): TextEncoder[Byte] with
     def encode(x: Byte) = format.formatByte(x)      
 
-  given (using format: Format.ShortFormat): TextEncoder[Short] with
+  given shortEncoder(using format: Format.ShortFormat): TextEncoder[Short] with
     def encode(x: Short) = format.formatShort(x)      
 
-  given (using format: Format.IntFormat): TextEncoder[Int] with 
+  given intEncoder(using format: Format.IntFormat): TextEncoder[Int] with 
     def encode(x: Int) = format.formatInt(x)
 
-  given (using format: Format.LongFormat): TextEncoder[Long] with
+  given longEncoder(using format: Format.LongFormat): TextEncoder[Long] with
     def encode(x: Long) = format.formatLong(x)
       
-  given (using format: Format.FloatFormat): TextEncoder[Float] with
+  given floatEncoder(using format: Format.FloatFormat): TextEncoder[Float] with
     def encode(x: Float) = format.formatFloat(x)
 
-  given (using format: Format.DoubleFormat): TextEncoder[Double] with
+  given doubleEncoder(using format: Format.DoubleFormat): TextEncoder[Double] with
     def encode(x: Double) = format.formatDouble(x)
 
-  given (using format: Format.BigIntFormat): TextEncoder[BigInt] with
+  given bigIntEncoder(using format: Format.BigIntFormat): TextEncoder[BigInt] with
     def encode(x: BigInt) = format.formatBigInt(x)
 
-  given (using format: Format.BigDecimalFormat): TextEncoder[BigDecimal] with
+  given bigDecimalEncoder(using format: Format.BigDecimalFormat): TextEncoder[BigDecimal] with
     def encode(x: BigDecimal) = format.formatBigDecimal(x)
 
-  given (using formatter: Format.DateFormatter): TextEncoder[LocalDate] with
+  given localDateEncoder(using formatter: Format.DateFormatter): TextEncoder[LocalDate] with
     def encode(x: LocalDate) = formatter.formatDate(x)
 
-  given (using formatter: Format.TimeFormatter): TextEncoder[LocalTime] with
+  given localTimeEncoder(using formatter: Format.TimeFormatter): TextEncoder[LocalTime] with
     def encode(x: LocalTime) = formatter.formatTime(x)
 
-  given (using formatter: Format.DateTimeFormatter): TextEncoder[LocalDateTime] with
+  given localDateTimeEncoder(using formatter: Format.DateTimeFormatter): TextEncoder[LocalDateTime] with
     def encode(x: LocalDateTime) = formatter.formatDateTime(x)
 
 end TextEncoder
