@@ -85,6 +85,18 @@ object Show:
         case EmptyPolicy.Show => Tree.Leaf("[]")
         case EmptyPolicy.Hide => Tree.Empty
 
+  given [A, B](using innerA: Show[A], innerB: Show[B]): Show[(Map[A, B])] with
+    def tree(xs: Map[A, B])(using policy: EmptyPolicy) = 
+      if xs.nonEmpty then 
+        val items = xs.flatMap: (k, v) => 
+          val keyTree = innerA.tree(k)
+          val valueTree = innerB.tree(v)
+          List(keyTree.withLabel("key"), valueTree.withLabel("value"))
+        Tree.Node("", items.toList)
+      else policy match
+        case EmptyPolicy.Show => Tree.Leaf("[]")
+        case EmptyPolicy.Hide => Tree.Empty
+
   inline def derived[A <: Product](using m: Mirror.ProductOf[A]): Show[A] = 
     type Shows = Tuple.Map[m.MirroredElemTypes, Show]
     val shows = summonAll[Shows].toList.asInstanceOf[List[Show[Any]]]

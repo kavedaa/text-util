@@ -1,4 +1,4 @@
-package demo
+package demo.show
 
 import no.vedaadata.text.*
 
@@ -7,12 +7,10 @@ case class Country(
   name: String,
   language: String,
   inhabitants: BigDecimal)
-  derives Show
 
 case class Hobby(
   name: String,
   description: Option[String])
-  derives Show
 
 case class Person(
   firstName: String,
@@ -21,10 +19,9 @@ case class Person(
   city: Option[String],
   country: Country,
   income: Option[BigDecimal],
-  hobbies: List[Hobby])
-  derives Show
+  hobbiesByCountry: Map[Country, List[Hobby]])
 
-object Test:
+object Person:
 
   val Norway = Country("NO", "Norway", "Norwegian", BigDecimal(5000000))
   val Sweden = Country("SE", "Sweden", "Swedish", BigDecimal(7000000))
@@ -40,7 +37,9 @@ object Test:
     Some("Bergen"),
     Norway,
     Some(BigDecimal(123000)),
-    Nil)
+    Map(
+      Norway -> List(Chess, Golf),
+      Sweden -> List(Tennis)))
 
   val Bob = Person(
     "Bob",
@@ -49,12 +48,17 @@ object Test:
     None,
     Sweden,
     None,
-    List(Golf, Tennis))
+    Map(
+      Sweden -> List(Golf, Tennis)))
 
   val persons = List(Tom, Bob)
 
 @main def main =
-  given Show[Country] = Show.proxy[Country, String](_.name)
+  // given Show[Country] = Show.derived
+  // given Show[Hobby] = Show.derived
   given Show[Person] = Show.derived
+
+  given Show[Country] = Show.proxy(_.name)
+  given Show[Hobby] = Show.proxy(_.name)
 //  given Show.EmptyPolicy = Show.EmptyPolicy.Hide
-  println(Test.persons.show)
+  println(Person.persons.show)
