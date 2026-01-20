@@ -11,13 +11,13 @@ trait Render[A]:
 
 object Render:
 
-  given default[A](using render: A => String): Render[A] with
-    def apply(x: A) = Some(render(x))
+  given default[A](using f: A => String): Render[A] with
+    def apply(x: A) = Some(f(x))
 
   given fromTextEncoder[A](using textEncoder: TextEncoder[A]): Render[A] with
     def apply(x: A) = Some(textEncoder.encode(x))
 
-  given [A](using inner: Render[A]): Render[Option[A]] with
+  given option[A](using inner: Render[A]): Render[Option[A]] with
     def apply(x: Option[A]) = x.flatMap(inner.apply)
 
   //  special
