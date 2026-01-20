@@ -1,5 +1,6 @@
 package no.vedaadata.text.table
 
+import no.vedaadata.text.*
 object TextTableRenderer:
 
   val VerticalLineChar = '|'
@@ -44,7 +45,6 @@ object TextTableRenderer:
   private def alignedIn(cell: TextTable.Cell, width: Int): String =
     val fittedText = fittedIn(cell, width)
     val space = width - paddedText(cell).length
-    import TextTable.Alignment
     cell.alignment match
       case Alignment.Left =>
         paddedText(cell) + " " * space
