@@ -11,14 +11,25 @@ trait Render[A]:
 
 object Render:
 
-  given default[A](using f: A => String): Render[A] with
+  given default[A]: Render[A] with
+    def apply(x: A) = Some(x.toString)
+
+  given from[A](using f: A => String): Render[A] with
     def apply(x: A) = Some(f(x))
 
-  given fromTextEncoder[A](using textEncoder: TextEncoder[A]): Render[A] with
-    def apply(x: A) = Some(textEncoder.encode(x))
+  // given fromFormat[A](using format: Format[A]): Render[A] with
+  //   def apply(x: A) = Some(format.format(x))
 
-  given option[A](using inner: Render[A]): Render[Option[A]] with
-    def apply(x: Option[A]) = x.flatMap(inner.apply)
+  // given fromTextEncoder[A](using textEncoder: TextEncoder[A]): Render[A] with
+  //   def apply(x: A) = Some(textEncoder.encode(x))
+
+  given option[A](using inner: Render[A])(using noneRender: Render[None.type]): Render[Option[A]] with
+    def apply(x: Option[A]) = x match
+      case Some(value) => inner(value)
+      case None        => noneRender(None)
+
+  given none: Render[None.type] with
+    def apply(x: None.type) = None
 
   //  special
 
