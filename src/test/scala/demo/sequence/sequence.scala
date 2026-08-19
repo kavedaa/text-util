@@ -17,7 +17,7 @@ object Person:
 
 @main def main =
 
-  given Format.DateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+  given Format[LocalDate] = Format.localDateFormatFromDateTimeFormatterPattern("dd/MM/yyyy")
 
   val layout = TextSequence.Layout[Person](
     TextSequence.Layout.Column("Name", _.name),

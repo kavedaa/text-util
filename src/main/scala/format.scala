@@ -1,98 +1,142 @@
 package no.vedaadata.text
 
-import java.time.*
-import java.time.temporal.TemporalAccessor
+import scala.util.*
 
-  //  Ensure we can use different givens for same underlying types
+import java.text.DecimalFormat
+import java.time.format.DateTimeFormatter
+import java.time.*
+
+/**
+  * A generalization of ways to format and parse primitive types like numbers and dates,
+  * instead of using e.g. [[java.text.DecimalFormat]] or [[java.time.format.DateTimeFormatter]] directly.
+  */
+trait Format[A]:
+  def format(x: A): String
+  def parse(x: String): Try[A]
 
 object Format:
 
-  trait BooleanFormat:
-    def formatBoolean(x: Boolean): String
-    def parseBoolean(x: String): Boolean
+  //  Numbers
 
-  object BooleanFormat:
-    given default: BooleanFormat with
-      def formatBoolean(x: Boolean) = if x then "true" else "false"
-      def parseBoolean(x: String) = if x == "true" then true else if x == "false" then false else throw new IllegalArgumentException(s"Could not parse $x as Boolean")
+  given defaultIntFormat: Format[Int] = new Format[Int]:
+    def format(x: Int): String = x.toString
+    def parse(x: String): Try[Int] = Try(x.toInt)
 
-  opaque type ByteFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  def intFormatFromDecimalFormat(dcf: DecimalFormat): Format[Int] = new Format[Int]:
+    def format(x: Int): String = dcf.format(x)
+    def parse(x: String): Try[Int] = Try(dcf.parse(x).intValue)
 
-  object ByteFormat:
-    extension (f: ByteFormat) def formatByte(x: Byte) = f.format(x)
-    extension (f: ByteFormat) def parseByte(x: String) = f.parse(x).byteValue
-    given default: ByteFormat = new java.text.DecimalFormat
+  def intFormatFromDecimalFormatPattern(pattern: String): Format[Int] = 
+    intFormatFromDecimalFormat(new DecimalFormat(pattern))
 
-  opaque type ShortFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  given defaultLongFormat: Format[Long] = new Format[Long]:
+    def format(x: Long): String = x.toString
+    def parse(x: String): Try[Long] = Try(x.toLong)
 
-  object ShortFormat:
-    extension (f: ShortFormat) def parseShort(x: String) = f.parse(x).shortValue
-    extension (f: ShortFormat) def formatShort(x: Short) = f.format(x)
-    given default: ShortFormat = new java.text.DecimalFormat
+  def longFormatFromDecimalFormat(dcf: DecimalFormat): Format[Long] = new Format[Long]:
+    def format(x: Long): String = dcf.format(x)
+    def parse(x: String): Try[Long] = Try(dcf.parse(x).longValue)
 
-  opaque type IntFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  def longFormatFromDecimalFormatPattern(pattern: String): Format[Long] =
+    longFormatFromDecimalFormat(new DecimalFormat(pattern))
 
-  object IntFormat:
-    extension (f: IntFormat) def parseInt(x: String) = f.parse(x).intValue
-    extension (f: IntFormat) def formatInt(x: Int) = f.format(x)
-    given default: IntFormat = new java.text.DecimalFormat
+  given defaultFloatFormat: Format[Float] = new Format[Float]:
+    def format(x: Float): String = x.toString
+    def parse(x: String): Try[Float] = Try(x.toFloat)
 
-  opaque type LongFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  def floatFormatFromDecimalFormat(dcf: DecimalFormat): Format[Float] = new Format[Float]:
+    def format(x: Float): String = dcf.format(x)
+    def parse(x: String): Try[Float] = Try(dcf.parse(x).floatValue)
 
-  object LongFormat:
-    extension (f: LongFormat) def formatLong(x: Long) = f.format(x)
-    extension (f: LongFormat) def parseLong(x: String) = f.parse(x).longValue
-    given default: LongFormat = new java.text.DecimalFormat
+  def floatFormatFromDecimalFormatPattern(pattern: String): Format[Float] =
+    floatFormatFromDecimalFormat(new DecimalFormat(pattern))
 
-  opaque type FloatFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  given defaultDoubleFormat: Format[Double] = new Format[Double]:
+    def format(x: Double): String = x.toString
+    def parse(x: String): Try[Double] = Try(x.toDouble)
 
-  object FloatFormat:
-    extension (f: FloatFormat) def formatFloat(x: Float) = f.format(x)
-    extension (f: FloatFormat) def parseFloat(x: String) = f.parse(x).floatValue
-    given default: FloatFormat = new java.text.DecimalFormat
+  def doubleFormatFromDecimalFormat(dcf: DecimalFormat): Format[Double] = new Format[Double]:
+    def format(x: Double): String = dcf.format(x)
+    def parse(x: String): Try[Double] = Try(dcf.parse(x).doubleValue)
 
-  opaque type DoubleFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  def doubleFormatFromDecimalFormatPattern(pattern: String): Format[Double] =
+    doubleFormatFromDecimalFormat(new DecimalFormat(pattern))
 
-  object DoubleFormat:
-    extension (f: DoubleFormat) def formatDouble(x: Double) = f.format(x)
-    extension (f: DoubleFormat) def parseDouble(x: String) = f.parse(x).doubleValue
-    given default: DoubleFormat = new java.text.DecimalFormat
+  given defaultByteFormat: Format[Byte] = new Format[Byte]:
+    def format(x: Byte): String = x.toString
+    def parse(x: String): Try[Byte] = Try(x.toByte)
 
-  //  note that if a custom format is created, it needs to include the `setParseBigDecimal` call, otherwise parsing will fail
-  //  also that we go through an intermediate BigDecimal since there is no support for BigInteger on DecimalFormat
-  opaque type BigIntFormat >: java.text.DecimalFormat = java.text.DecimalFormat
+  def byteFormatFromDecimalFormat(dcf: DecimalFormat): Format[Byte] = new Format[Byte]:
+    def format(x: Byte): String = dcf.format(x)
+    def parse(x: String): Try[Byte] = Try(dcf.parse(x).byteValue)
 
-  object BigIntFormat:
-    extension (f: BigIntFormat) def formatBigInt(x: BigInt) = f.format(x)
-    extension (f: BigIntFormat) def parseBigInt(x: String) = f.parse(x).asInstanceOf[java.math.BigDecimal].toBigInteger: BigInt
-    given default: BigIntFormat = new java.text.DecimalFormat { setParseBigDecimal(true) }
-
-  //  note that if a custom format is created, it needs to include the `setParseBigDecimal` call, otherwise parsing will fail
-  opaque type BigDecimalFormat >: java.text.DecimalFormat = java.text.DecimalFormat
-
-  object BigDecimalFormat:
-    extension (f: BigDecimalFormat) def formatBigDecimal(x: BigDecimal) = f.format(x)    
-    extension (f: BigDecimalFormat) def parseBigDecimal(x: String) = f.parse(x).asInstanceOf[java.math.BigDecimal]: BigDecimal
-    given default: BigDecimalFormat = new java.text.DecimalFormat { setParseBigDecimal(true) }
-
-  opaque type DateFormatter >: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter
-
-  object DateFormatter:
-    extension (f: DateFormatter) def formatDate(x: TemporalAccessor) = f.format(x)
-    extension (f: DateFormatter) def parseDate(x: String) = LocalDate.parse(x, f)
-    given default: DateFormatter = java.time.format.DateTimeFormatter.ISO_DATE
-
-  opaque type TimeFormatter >: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter
-
-  object TimeFormatter:
-    extension (f: TimeFormatter) def formatTime(x: TemporalAccessor) = f.format(x)
-    extension (f: TimeFormatter) def parseTime(x: String) = LocalTime.parse(x, f)
-    given default: TimeFormatter = java.time.format.DateTimeFormatter.ISO_TIME
-
-  opaque type DateTimeFormatter >: java.time.format.DateTimeFormatter = java.time.format.DateTimeFormatter
+  def byteFormatFromDecimalFormatPattern(pattern: String): Format[Byte] =
+    byteFormatFromDecimalFormat(new DecimalFormat(pattern))
   
-  object DateTimeFormatter:
-    extension (f: DateTimeFormatter) def formatDateTime(x: TemporalAccessor) = f.format(x)
-    extension (f: DateTimeFormatter) def parseDateTime(x: String) = LocalDateTime.parse(x, f)
-    given default: DateTimeFormatter = java.time.format.DateTimeFormatter.ISO_DATE_TIME
+  given defaultShortFormat: Format[Short] = new Format[Short]:
+    def format(x: Short): String = x.toString
+    def parse(x: String): Try[Short] = Try(x.toShort)
 
+  def shortFormatFromDecimalFormat(dcf: DecimalFormat): Format[Short] = new Format[Short]:
+    def format(x: Short): String = dcf.format(x)
+    def parse(x: String): Try[Short] = Try(dcf.parse(x).shortValue)
+
+  def shortFormatFromDecimalFormatPattern(pattern: String): Format[Short] =
+    shortFormatFromDecimalFormat(new DecimalFormat(pattern))
+
+  given defaultBigIntFormat: Format[BigInt] = new Format[BigInt]:
+    def format(x: BigInt): String = x.toString
+    def parse(x: String): Try[BigInt] = Try(BigInt(x))
+
+  def bigIntFormatFromDecimalFormat(dcf: DecimalFormat): Format[BigInt] = new Format[BigInt]:
+    def format(x: BigInt): String = dcf.format(x)
+    def parse(x: String): Try[BigInt] = Try(dcf.parse(x).asInstanceOf[java.math.BigDecimal].toBigInteger: BigInt)
+
+  def bigIntFormatFromDecimalFormatPattern(pattern: String): Format[BigInt] =
+    bigIntFormatFromDecimalFormat(new DecimalFormat(pattern) { setParseBigDecimal(true) })
+
+  given defaultBigDecimalFormat: Format[BigDecimal] = new Format[BigDecimal]:
+    def format(x: BigDecimal): String = x.toString
+    def parse(x: String): Try[BigDecimal] = Try(BigDecimal(x))
+
+  def bigDecimalFormatFromDecimalFormat(dcf: DecimalFormat): Format[BigDecimal] = new Format[BigDecimal]:
+    def format(x: BigDecimal): String = dcf.format(x)
+    def parse(x: String): Try[BigDecimal] = Try(dcf.parse(x).asInstanceOf[java.math.BigDecimal]: BigDecimal)
+
+  def bigDecimalFormatFromDecimalFormatPattern(pattern: String): Format[BigDecimal] =
+    bigDecimalFormatFromDecimalFormat(new DecimalFormat(pattern) { setParseBigDecimal(true) })
+  
+  //  Date and time
+
+  given defaultLocalDateFormat: Format[LocalDate] = new Format[LocalDate]:
+    def format(x: LocalDate): String = x.toString
+    def parse(x: String): Try[LocalDate] = Try(LocalDate.parse(x))
+
+  def localDateFormatFromDateTimeFormatter(df: DateTimeFormatter): Format[LocalDate] = new Format[LocalDate]:
+    def format(x: LocalDate): String = df.format(x)
+    def parse(x: String): Try[LocalDate] = Try(LocalDate.parse(x, df))
+
+  def localDateFormatFromDateTimeFormatterPattern(pattern: String): Format[LocalDate] =
+    localDateFormatFromDateTimeFormatter(DateTimeFormatter.ofPattern(pattern))
+
+  given defaultLocalTimeFormat: Format[LocalTime] = new Format[LocalTime]:
+    def format(x: LocalTime): String = x.toString
+    def parse(x: String): Try[LocalTime] = Try(LocalTime.parse(x))
+
+  def localTimeFormatFromDateTimeFormatter(df: DateTimeFormatter): Format[LocalTime] = new Format[LocalTime]:
+    def format(x: LocalTime): String = df.format(x)
+    def parse(x: String): Try[LocalTime] = Try(LocalTime.parse(x, df))
+
+  def localTimeFormatFromDateTimeFormatterPattern(pattern: String): Format[LocalTime] =
+    localTimeFormatFromDateTimeFormatter(DateTimeFormatter.ofPattern(pattern))
+
+  given defaultLocalDateTimeFormat: Format[LocalDateTime] = new Format[LocalDateTime]:
+    def format(x: LocalDateTime): String = x.toString
+    def parse(x: String): Try[LocalDateTime] = Try(LocalDateTime.parse(x))
+
+  def localDateTimeFormatFromDateTimeFormatter(df: DateTimeFormatter): Format[LocalDateTime] = new Format[LocalDateTime]:
+    def format(x: LocalDateTime): String = df.format(x)
+    def parse(x: String): Try[LocalDateTime] = Try(LocalDateTime.parse(x, df))
+
+  def localDateTimeFormatFromDateTimeFormatterPattern(pattern: String): Format[LocalDateTime] =
+    localDateTimeFormatFromDateTimeFormatter(DateTimeFormatter.ofPattern(pattern))
